@@ -1,9 +1,9 @@
 name: Build & Push to GHCR
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
@@ -32,6 +32,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
+          # flavor: |
+          #   latest=auto
+          tags: |
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{is_default_branch}}
 
       - name: Build and push Docker image
         id: build-and-push
