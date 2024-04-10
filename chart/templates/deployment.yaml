@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-ingres-to-avahi-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-ingres-to-avahi
+  template:
+    metadata:
+      labels:
+        app: k8s-ingres-to-avahi
+    spec:
+      serviceAccountName: k8s-ingres-to-avahi
+      automountServiceAccountToken: true
+      containers:
+      - name: main
+        image: piotrb/k8s-ingress-to-avahi:latest
+        args:
+          - --hostname
+          - kpi1.local
+        volumeMounts:
+        - mountPath: /var/run/dbus
+          name: dbus
+      volumes:
+      - name: dbus
+        hostPath:
+          path: /var/run/dbus
+          type: Directory

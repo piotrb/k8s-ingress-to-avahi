@@ -52,7 +52,7 @@ async function main() {
 }
 
 main().catch((e) => {
-	console.error("main failed with:", e)
+	console.error("main failed with:", e, e.type)
 }).finally(() => {
 	cleanupAvahi()
 })

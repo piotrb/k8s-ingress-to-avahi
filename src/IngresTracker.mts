@@ -1,4 +1,4 @@
-import { KubeConfig, Watch } from "@kubernetes/client-node"
+import { CoreV1Api, KubeConfig, NetworkingApi, NetworkingV1Api, Watch } from "@kubernetes/client-node"
 import { AvahiEntryGroupInterface, avahiAddAlias, avahiDeleteAlias, cleanup as cleanupAvahi } from "./avahi.mjs";
 import { removeItem } from "./util.mjs";
 
@@ -21,32 +21,45 @@ export class IngresTracker {
   }
 
   async run() {
-    const watch = new Watch(this.kc);
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        const watch = new Watch(this.kc);
 
-    const waitReq = await watch.watch(`/apis/networking.k8s.io/v1/namespaces/${this.namespace}/ingresses`, {}, async (phase, apiObj) => {
-      // console.info(phase, apiObj)
-      console.info(`${phase} - ${apiObj.metadata.namespace}/${apiObj.metadata.name}`)
+        const waitReq = await watch.watch(`/apis/networking.k8s.io/v1/namespaces/${this.namespace}/ingresses`, {}, async (phase, apiObj) => {
+          // console.info(phase, apiObj)
+          console.info(`${phase} - ${apiObj.metadata.namespace}/${apiObj.metadata.name}`)
 
-      switch (phase) {
-        case "ADDED":
-          await this.handleAdded(apiObj)
-          break;
-        case "DELETED":
-          await this.handleDeleted(apiObj)
-          break;
-        case "MODIFIED":
-          await this.handleModified(apiObj)
-          break;
-        default:
-          console.error("got unhandled event", phase, apiObj)
+          switch (phase) {
+            case "ADDED":
+              await this.handleAdded(apiObj)
+              break;
+            case "DELETED":
+              await this.handleDeleted(apiObj)
+              break;
+            case "MODIFIED":
+              await this.handleModified(apiObj)
+              break;
+            default:
+              console.error("got unhandled event", phase, apiObj)
+          }
+        }, (err) => {
+          this.cleanup()
+
+          if (err !== undefined) {
+            console.info("done with errors")
+            reject(err)
+          } else {
+            console.info("done")
+            resolve()
+          }
+        })
+
+        process.on('SIGTERM', () => waitReq.abort("SIGTERM"))
+        process.on('SIGINT', () => waitReq.abort("SIGINT"))
+      } catch (e) {
+        reject(e)
       }
-    }, (err) => {
-      console.info("done", err)
-      this.cleanup()
     })
-
-    process.on('SIGTERM', () => waitReq.abort())
-    process.on('SIGINT', () => waitReq.abort())
   }
 
   async cleanup() {
