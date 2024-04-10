@@ -42,9 +42,9 @@ jobs:
           platforms: linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
+          cache-from: |-
             type=registry,ref=${{ env.IMAGE_NAME }}:cache
             ${{ github.github.ref_type == 'branch' && format('type=registry,ref={0}:cache-{1}', env.IMAGE_NAME, github.ref_name) || '' }}
-          cache-to: |
+          cache-to: |-
             type=registry,ref=${{ env.IMAGE_NAME }}:cache,mode=max
-            ${{ github.github.ref_type == 'branch' && format('type=registry,ref={0}:cache-{1}', env.IMAGE_NAME, github.ref_name) || '' }},mode=max
+            ${{ github.github.ref_type == 'branch' && format('type=registry,ref={0}:cache-{1},mode=max', env.IMAGE_NAME, github.ref_name) || '' }}
