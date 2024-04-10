@@ -16,10 +16,10 @@ spec:
       automountServiceAccountToken: true
       containers:
       - name: main
-        image: piotrb/k8s-ingress-to-avahi:latest
+        image: {{ .Values.image }}
         args:
           - --hostname
-          - kpi1.local
+          - {{ .Values.hostname }}
         volumeMounts:
         - mountPath: /var/run/dbus
           name: dbus

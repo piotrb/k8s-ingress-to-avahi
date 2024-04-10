@@ -1,0 +1,2 @@
+image: ghcr.io/piotrb/k8s-ingress-to-avahi:main
+hostname: kpi1.local

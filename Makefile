@@ -1,5 +1,3 @@
-@PHONY: build run
-
 build:
 	docker build . -t k8s-ingress-to-avahi
 
