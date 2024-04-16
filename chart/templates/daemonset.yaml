@@ -11,7 +11,7 @@ spec:
       labels:
         app: k8s-ingres-to-avahi
     spec:
-      serviceAccountName: k8s-ingres-to-avahi
+      serviceAccountName: {{ .Values.serviceAccount.name }}
       automountServiceAccountToken: true
       containers:
       - name: main

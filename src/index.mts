@@ -85,6 +85,7 @@ function exec() {
 		logger.info("done")
 	}).catch((e) => {
 		logger.error({ error: e }, `main failed with error: (${e.type}) - ${e}`)
+		process.exit(1)
 	}).finally(() => {
 		cleanupAvahi()
 	})

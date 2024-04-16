@@ -1,2 +1,8 @@
+serviceAccount:
+  name: k8s-ingres-to-avahi
+
+clusterRole:
+  name: avahi-ingress-reader
+
 image: ghcr.io/piotrb/k8s-ingress-to-avahi:latest
 hostname: kpi1.local
