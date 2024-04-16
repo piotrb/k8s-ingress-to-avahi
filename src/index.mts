@@ -84,7 +84,7 @@ function exec() {
 	main({ kubeConfig: args.values["kube-config"], hostname: args.values.hostname, logger }).then(() => {
 		logger.info("done")
 	}).catch((e) => {
-		logger.error("main failed with:", e, e.type)
+		logger.error({ error: e }, `main failed with error: (${e.type}) - ${e}`)
 	}).finally(() => {
 		cleanupAvahi()
 	})
