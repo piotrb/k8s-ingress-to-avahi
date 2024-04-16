@@ -1,10 +1,11 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: ingres-reader
 subjects:
 - kind: ServiceAccount
   name: k8s-ingres-to-avahi
+  namespace: ingres-to-avahi
 roleRef:
   kind: ClusterRole
   name: avahi-ingress-reader
