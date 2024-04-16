@@ -8,6 +8,3 @@ run: build
 		-v ~/.kube/config:/home/node/.kube/config \
 		k8s-ingress-to-avahi \
 		--hostname kpi1.local
-
-watch:
-	npx tsc --watch

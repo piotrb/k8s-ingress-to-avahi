@@ -5,8 +5,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: k8s-ingres-to-avahi
-  namespace: default
 roleRef:
-  kind: Role
-  name: ingres-reader
+  kind: ClusterRole
+  name: avahi-ingress-reader
   apiGroup: rbac.authorization.k8s.io

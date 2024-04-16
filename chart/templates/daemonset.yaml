@@ -1,9 +1,8 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: k8s-ingres-to-avahi-deployment
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: k8s-ingres-to-avahi

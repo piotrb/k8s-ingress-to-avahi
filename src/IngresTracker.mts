@@ -1,6 +1,7 @@
-import { CoreV1Api, KubeConfig, NetworkingApi, NetworkingV1Api, Watch } from "@kubernetes/client-node"
+import { KubeConfig, Watch } from "@kubernetes/client-node"
 import { AvahiEntryGroupInterface, avahiAddAlias, avahiDeleteAlias, cleanup as cleanupAvahi } from "./avahi.mjs";
 import { removeItem } from "./util.mjs";
+import { BaseLogger } from "pino";
 
 interface IngressApiObject {
   metadata: {
@@ -13,11 +14,24 @@ interface IngressApiObject {
   }
 }
 
+interface ConstructorOptions {
+  hostname: string
+  kc: KubeConfig
+  logger: BaseLogger
+}
+
 export class IngresTracker {
   cnames: Record<string, AvahiEntryGroupInterface> = {}
   entriesByUid: Record<string, Record<string, boolean>> = {}
 
-  constructor(private hostname: string, private kc: KubeConfig, private namespace: string) {
+  private readonly hostname: string
+  private readonly kc: KubeConfig
+  private readonly logger: BaseLogger
+
+  constructor(options: ConstructorOptions) {
+    this.hostname = options.hostname
+    this.kc = options.kc
+    this.logger = options.logger
   }
 
   async run() {
@@ -25,9 +39,10 @@ export class IngresTracker {
       try {
         const watch = new Watch(this.kc);
 
-        const waitReq = await watch.watch(`/apis/networking.k8s.io/v1/namespaces/${this.namespace}/ingresses`, {}, async (phase, apiObj) => {
-          // console.info(phase, apiObj)
-          console.info(`${phase} - ${apiObj.metadata.namespace}/${apiObj.metadata.name}`)
+        const url = `/apis/networking.k8s.io/v1/ingresses`
+
+        const waitReq = await watch.watch(url, {}, async (phase, apiObj) => {
+          this.logger.info({ phase, ingress: { namespace: apiObj.metadata.namespace, name: apiObj.metadata.name } }, `${phase} - ${apiObj.metadata.namespace}/${apiObj.metadata.name}`)
 
           switch (phase) {
             case "ADDED":
@@ -40,16 +55,20 @@ export class IngresTracker {
               await this.handleModified(apiObj)
               break;
             default:
-              console.error("got unhandled event", phase, apiObj)
+              this.logger.error({ phase, apiObj }, "got unhandled event")
           }
         }, (err) => {
-          this.cleanup()
-
           if (err !== undefined) {
-            console.info("done with errors")
-            reject(err)
+            if (err.type === "aborted") {
+              this.logger.info("aborted")
+              resolve()
+            } else {
+              this.cleanup()
+              this.logger.error("done with errors")
+              reject(err)
+            }
           } else {
-            console.info("done")
+            this.logger.info("done")
             resolve()
           }
         })
@@ -107,7 +126,7 @@ export class IngresTracker {
 
   async addAlias(host: string, uid: string) {
     if (!this.cnames[host]) {
-      console.info("Adding", host)
+      this.logger.info({ host }, `Adding ${host}`)
 
       const entryGroupInt = await avahiAddAlias(host, this.hostname)
 
@@ -123,7 +142,7 @@ export class IngresTracker {
 
   async deleteAlias(host: string) {
     if (this.cnames[host]) {
-      console.info("Deleting", host)
+      this.logger.info({ host }, `Deleting ${host}`)
       await avahiDeleteAlias(this.cnames[host])
       delete this.cnames[host]
     }

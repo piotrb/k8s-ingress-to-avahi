@@ -1,9 +1,26 @@
+import 'source-map-support/register.js'
+
 import { KubeConfig } from "@kubernetes/client-node"
 import { cleanup as cleanupAvahi } from "./avahi.mjs";
 import { parseArgs } from "node:util"
 import { IngresTracker } from "./IngresTracker.mjs";
 
-async function main() {
+import { BaseLogger, Logger, LoggerOptions, pino } from 'pino'
+import PinoPretty from 'pino-pretty'
+
+async function main(options: { kubeConfig?: string, hostname: string, logger: BaseLogger }) {
+	const kc = new KubeConfig();
+	if (options.kubeConfig !== undefined) {
+		kc.loadFromFile(options.kubeConfig)
+	} else {
+		kc.loadFromDefault();
+	}
+
+	const tracker = new IngresTracker({ hostname: options.hostname, kc, logger: options.logger })
+	await tracker.run()
+}
+
+function exec() {
 	let args
 	try {
 		args = parseArgs({
@@ -16,10 +33,9 @@ async function main() {
 					type: "string",
 					short: "c"
 				},
-				namespace: {
-					type: "string",
-					short: "n",
-					default: "default"
+				json: {
+					type: "boolean",
+					default: false
 				}
 			}
 		})
@@ -40,19 +56,38 @@ async function main() {
 		throw e
 	}
 
-	const kc = new KubeConfig();
-	if (args.values["kube-config"] !== undefined) {
-		kc.loadFromFile(args.values["kube-config"])
-	} else {
-		kc.loadFromDefault();
+	var logger: Logger
+
+	const loggerOptions: LoggerOptions = {
+		formatters: {
+			bindings(bindings) {
+				delete bindings.pid
+				delete bindings.hostname
+				return bindings
+			}
+		}
 	}
 
-	const tracker = new IngresTracker(args.values.hostname, kc, args.values.namespace!)
-	await tracker.run()
+	if (args.values.json) {
+		logger = pino(loggerOptions)
+	} else {
+		const pino_pretty = PinoPretty.build({
+			colorize: true,
+			colorizeObjects: true,
+			sync: true,
+		})
+		logger = pino(loggerOptions, pino_pretty)
+	}
+
+	logger.info({ args: { kubeConfig: args.values["kube-config"], hostname: args.values.hostname } }, "Launching")
+
+	main({ kubeConfig: args.values["kube-config"], hostname: args.values.hostname, logger }).then(() => {
+		logger.info("done")
+	}).catch((e) => {
+		logger.error("main failed with:", e, e.type)
+	}).finally(() => {
+		cleanupAvahi()
+	})
 }
 
-main().catch((e) => {
-	console.error("main failed with:", e, e.type)
-}).finally(() => {
-	cleanupAvahi()
-})
+exec()

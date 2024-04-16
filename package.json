@@ -5,15 +5,15 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "run": "node --loader ts-node/esm src/index.mts",
     "build": "npx tsc"
   },
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@kubernetes/client-node": "1.0.0-rc4",
+    "@kubernetes/client-node": ">= 1.0.0-rc4",
     "dbus-next": "^0.10.0",
+    "pino": "^8.20.0",
+    "pino-pretty": "^11.0.0",
     "source-map-support": "^0.5.21"
   },
   "devDependencies": {

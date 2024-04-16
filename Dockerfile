@@ -31,4 +31,4 @@ RUN npm install --omit=dev --frozen-lockfile
 
 COPY --chown=node --from=builder /app/dist ./dist
 
-ENTRYPOINT [ "node", "-r", "source-map-support/register",  "dist/index.mjs" ]
+ENTRYPOINT [ "node", "dist/index.mjs" ]
