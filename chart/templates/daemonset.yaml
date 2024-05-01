@@ -16,9 +16,9 @@ spec:
       containers:
       - name: main
         image: {{ .Values.image }}
-        args:
-          - --hostname
-          - {{ .Values.hostname }}
+        # args:
+        #   - --hostname
+        #   - {{ .Values.hostname }}
         env:
         - name: NODE_NAME
           valueFrom:
