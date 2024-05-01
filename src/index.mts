@@ -28,7 +28,7 @@ function exec() {
 				hostname: {
 					type: "string",
 					short: "h",
-					default: process.env.NODE_NAME !== undefined ? `${process.env.NODE_NME}.local` : undefined,
+					default: process.env.NODE_NAME !== undefined ? `${process.env.NODE_NAME}.local` : undefined,
 				},
 				"kube-config": {
 					type: "string",
