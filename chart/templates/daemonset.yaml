@@ -19,6 +19,11 @@ spec:
         args:
           - --hostname
           - {{ .Values.hostname }}
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         volumeMounts:
         - mountPath: /var/run/dbus
           name: dbus
