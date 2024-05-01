@@ -89,6 +89,10 @@ export class IngresTracker {
     cleanupAvahi()
   }
 
+  validHostname(hostname: string): boolean {
+    return hostname.endsWith(".local")
+  }
+
   async handleAdded(apiObj: IngressApiObject) {
     if (apiObj.spec.rules) {
       for (const rule of apiObj.spec.rules) {
@@ -125,6 +129,11 @@ export class IngresTracker {
   }
 
   async addAlias(host: string, uid: string) {
+    if (!this.validHostname(host)) {
+      this.logger.debug({ host }, `Skipping ${host} because its not .local`)
+      return
+    }
+
     if (!this.cnames[host]) {
       this.logger.info({ host }, `Adding ${host}`)
 
@@ -141,6 +150,11 @@ export class IngresTracker {
   }
 
   async deleteAlias(host: string) {
+    if (!this.validHostname(host)) {
+      this.logger.debug({ host }, `Skipping ${host} because its not .local`)
+      return
+    }
+
     if (this.cnames[host]) {
       this.logger.info({ host }, `Deleting ${host}`)
       await avahiDeleteAlias(this.cnames[host])
