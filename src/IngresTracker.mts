@@ -152,6 +152,13 @@ export class IngresTracker {
   }
 
   async handleModified(apiObj: SupportedApiObject) {
+    if (!this.entriesByUid[apiObj.metadata.uid]) {
+      this.logger.debug({ 
+        uid: apiObj.metadata.uid,
+        existingUids: Object.keys(this.entriesByUid)
+      }, "Skipping modified event - UID not found in entriesByUid")
+      return
+    }
     let originalHostnames = Object.keys(this.entriesByUid[apiObj.metadata.uid])
     const newHostnames = this.getHostsFromObject(apiObj)
 
